@@ -7,10 +7,10 @@
 // ─── Auxiliar: estrella de N puntas ───────────────────────────
 function drawStar(x, y, r1, r2, npoints) {
   let angle = TWO_PI / npoints;
-  let half  = angle / 2;
+  let half = angle / 2;
   beginShape();
   for (let a = -HALF_PI; a < TWO_PI - HALF_PI; a += angle) {
-    vertex(x + cos(a) * r2,        y + sin(a) * r2);
+    vertex(x + cos(a) * r2, y + sin(a) * r2);
     vertex(x + cos(a + half) * r1, y + sin(a + half) * r1);
   }
   endShape(CLOSE);
@@ -41,14 +41,14 @@ function drawRainbowTrack() {
 }
 
 function drawKerbs() {
-  let offset    = scrollY % (KERB_H * 2);
+  let offset = scrollY % (KERB_H * 2);
   let totalSegs = ceil((height + KERB_H * 2) / KERB_H) + 4;
   noStroke();
   for (let i = -2; i < totalSegs; i++) {
-    let y      = i * KERB_H + (offset % KERB_H);
+    let y = i * KERB_H + (offset % KERB_H);
     let parity = (i - floor(offset / KERB_H)) % 2;
     fill(parity === 0 ? color(...KERB_RED) : color(...KERB_WHITE));
-    rect(TRACK_X - KERB_W,  y, KERB_W, KERB_H);
+    rect(TRACK_X - KERB_W, y, KERB_W, KERB_H);
     rect(TRACK_X + TRACK_W, y, KERB_W, KERB_H);
   }
 }
@@ -62,22 +62,22 @@ function drawBorders() {
 }
 
 function drawLaneDividers() {
-  let dashOn  = 22;
+  let dashOn = 22;
   let dashOff = 13;
-  let phase   = scrollY % (dashOn + dashOff);
+  let phase = scrollY % (dashOn + dashOff);
   drawingContext.save();
   drawingContext.setLineDash([dashOn, dashOff]);
   drawingContext.lineDashOffset = -phase;
   stroke(...LINE_WHITE);
   strokeWeight(2);
-  line(TRACK_X + LANE_W,     0, TRACK_X + LANE_W,     height);
+  line(TRACK_X + LANE_W, 0, TRACK_X + LANE_W, height);
   line(TRACK_X + 2 * LANE_W, 0, TRACK_X + 2 * LANE_W, height);
   drawingContext.restore();
   drawingContext.setLineDash([]);
 }
 
 function drawStartLine() {
-  let slH  = 60;
+  let slH = 60;
   let tile = 15;
   let cols = floor(TRACK_W / tile);
   let rows = 4;
@@ -102,8 +102,8 @@ function drawStartLine() {
 function drawHUD_M2() {
   let col = color(255, 210, 0);
   if (currentAction === 'IZQUIERDA') col = color(100, 180, 255);
-  if (currentAction === 'DERECHA')   col = color(255, 100, 100);
-  if (currentAction === 'NEUTRAL')   col = color(150, 150, 150);
+  if (currentAction === 'DERECHA') col = color(255, 100, 100);
+  if (currentAction === 'NEUTRAL') col = color(150, 150, 150);
 
   noStroke();
   fill(0, 0, 0, 140);
@@ -126,7 +126,6 @@ function drawHUD_M2() {
   fill(120, 120, 120);
   textSize(10);
   text('← → : cambiar carril', 18, height - 38);
-  text('↑ : acelerar  |  ↓ : frenar', 18, height - 24);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -140,7 +139,7 @@ function setup() {
   randomSeed(42);
   for (let i = 0; i < 200; i++) {
     starsArray.push({
-      x: random(width),  y: random(height),
+      x: random(width), y: random(height),
       s: random(1, 4),
       r: 255, g: 255,
       b: random(200, 255),
@@ -161,9 +160,9 @@ function draw() {
   updateML();
 
   // Velocidad según acción
-  if      (currentAction === 'ADELANTE') gameSpeed = min(gameSpeed + 0.05, 12);
-  else if (currentAction === 'NEUTRAL')  gameSpeed = max(gameSpeed - 0.03, 2);
-  else                                   gameSpeed = lerp(gameSpeed, 5, 0.02);
+  if (currentAction === 'ADELANTE') gameSpeed = min(gameSpeed + 0.05, 12);
+  else if (currentAction === 'NEUTRAL') gameSpeed = max(gameSpeed - 0.03, 2);
+  else gameSpeed = lerp(gameSpeed, 5, 0.02);
 
   scrollY += gameSpeed;
 
@@ -205,10 +204,10 @@ function draw() {
 function keyPressed() {
   // El teclado solo actúa si el modelo ML aún no está activo
   if (mlReady) return;
-  if (keyCode === LEFT_ARROW)  currentAction = 'IZQUIERDA';
+  if (keyCode === LEFT_ARROW) currentAction = 'IZQUIERDA';
   if (keyCode === RIGHT_ARROW) currentAction = 'DERECHA';
-  if (keyCode === UP_ARROW)    currentAction = 'ADELANTE';
-  if (keyCode === DOWN_ARROW)  currentAction = 'NEUTRAL';
+  if (keyCode === UP_ARROW) currentAction = 'ADELANTE';
+  if (keyCode === DOWN_ARROW) currentAction = 'NEUTRAL';
 }
 
 function keyReleased() {

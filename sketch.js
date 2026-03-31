@@ -1,20 +1,10 @@
-// ═══════════════════════════════════════════════════════════════
-//  sketch.js — Pista, setup, draw y teclado
-//
-//  Depende de: globals.js · Player.js · Obstacle.js · Asteroid.js
-// ═══════════════════════════════════════════════════════════════
+import { Game } from "./js/game/Game.js";
 
-// ─── Auxiliar: estrella de N puntas ───────────────────────────
-function drawStar(x, y, r1, r2, npoints) {
-  let angle = TWO_PI / npoints;
-  let half = angle / 2;
-  beginShape();
-  for (let a = -HALF_PI; a < TWO_PI - HALF_PI; a += angle) {
-    vertex(x + cos(a) * r2, y + sin(a) * r2);
-    vertex(x + cos(a + half) * r1, y + sin(a + half) * r1);
-  }
-  endShape(CLOSE);
-}
+// ===== GLOBAL =====
+/**
+ * @type {Game} Instancia global del juego principal.
+ */
+let game;
 
 // ═══════════════════════════════════════════════════════════════
 //  FUNCIONES DE PISTA
@@ -98,121 +88,83 @@ function drawStartLine() {
   textStyle(NORMAL);
 }
 
-// ─── HUD provisional — el Miembro 3 reemplaza esto ────────────
-function drawHUD_M2() {
-  let col = color(255, 210, 0);
-  if (currentAction === 'IZQUIERDA') col = color(100, 180, 255);
-  if (currentAction === 'DERECHA') col = color(255, 100, 100);
-  if (currentAction === 'NEUTRAL') col = color(150, 150, 150);
-
-  noStroke();
-  fill(0, 0, 0, 140);
-  rect(10, 10, 170, 36, 8);
-  fill(col);
-  textAlign(LEFT, CENTER);
-  textSize(14);
-  textStyle(BOLD);
-  text('► ' + currentAction, 22, 29);
-  textStyle(NORMAL);
-
-  fill(0, 0, 0, 140);
-  rect(10, 54, 170, 32, 8);
-  fill(200, 200, 200);
-  textSize(12);
-  text('SPEED: ' + nf(gameSpeed, 1, 1) + ' px/f', 22, 71);
-
-  fill(80, 80, 80, 180);
-  rect(10, height - 52, 225, 42, 8);
-  fill(120, 120, 120);
-  textSize(10);
-  text('← → : cambiar carril', 18, height - 38);
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  SETUP
-// ═══════════════════════════════════════════════════════════════
-function setup() {
-  createCanvas(800, 600);
-  player = new Player();
-
-  // Pre-generar estrellas con semilla fija
-  randomSeed(42);
-  for (let i = 0; i < 200; i++) {
-    starsArray.push({
-      x: random(width), y: random(height),
-      s: random(1, 4),
-      r: 255, g: 255,
-      b: random(200, 255),
-      a: random(100, 255),
-    });
-  }
-  randomSeed(); // liberar RNG para obstáculos y asteroides
-
-  // Inicializar modelo de Teachable Machine (async — no bloquea)
-  initML();
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  DRAW
-// ═══════════════════════════════════════════════════════════════
-function draw() {
-  // ── Actualizar predicción ML (async no bloqueante) ──────────
-  updateML();
-
-  // Velocidad según acción
-  if (currentAction === 'ADELANTE') gameSpeed = min(gameSpeed + 0.05, 12);
-  else if (currentAction === 'NEUTRAL') gameSpeed = max(gameSpeed - 0.03, 2);
-  else gameSpeed = lerp(gameSpeed, 5, 0.02);
-
-  scrollY += gameSpeed;
-
-  // Pista
+// Expuesto a window para ser consumido por Renderer.js
+window.drawTrack = function() {
   drawStars();
   drawRainbowTrack();
   drawKerbs();
   drawBorders();
   drawLaneDividers();
   drawStartLine();
+};
 
-  // Spawn y loop de obstáculos + asteroides
-  frameCounter++;
-  if (frameCounter % OBS_SPAWN_RATE === 0) {
-    obstacles.push(new Obstacle());
-  }
-  if (frameCounter % 360 === 40) {
-    obstacles.push(new Asteroid());
-  }
+window.setup = function() {
+    createCanvas(800, 600); // 800 de ancho para acomodar la pista de la rama dev
+    
+    // Pre-generar estrellas con semilla fija
+    randomSeed(42);
+    for (let i = 0; i < 200; i++) {
+        starsArray.push({
+            x: random(width), y: random(height),
+            s: random(1, 4),
+            r: 255, g: 255,
+            b: random(200, 255),
+            a: random(100, 255),
+        });
+    }
+    randomSeed(); 
 
-  for (let i = obstacles.length - 1; i >= 0; i--) {
-    obstacles[i].update();
-    obstacles[i].draw();
-    if (obstacles[i].isOffScreen()) obstacles.splice(i, 1);
-  }
+    game = new Game();
 
-  // Player
-  player.update();
-  player.draw();
+    if (typeof initML === "function") {
+        initML(); // Inicia el modelo
+    }
+};
 
-  // HUD
-  drawHUD_M2();
-  drawMLStatus();
-}
+window.draw = function() {
+    if (typeof updateML === "function") updateML();
 
-// ═══════════════════════════════════════════════════════════════
-//  TECLADO — fallback cuando el modelo ML no está listo
-// ═══════════════════════════════════════════════════════════════
-function keyPressed() {
-  // El teclado solo actúa si el modelo ML aún no está activo
-  if (mlReady) return;
-  if (keyCode === LEFT_ARROW) currentAction = 'IZQUIERDA';
-  if (keyCode === RIGHT_ARROW) currentAction = 'DERECHA';
-  if (keyCode === UP_ARROW) currentAction = 'ADELANTE';
-  if (keyCode === DOWN_ARROW) currentAction = 'NEUTRAL';
-}
+    // Lógica dinámica de velocidad basada en acción ML
+    if (window.currentAction === 'ADELANTE') gameSpeed = min(gameSpeed + 0.05, 12);
+    else if (window.currentAction === 'NEUTRAL' || window.currentAction === 'NINGUNA') gameSpeed = max(gameSpeed - 0.03, 2);
+    else gameSpeed = lerp(gameSpeed, 5, 0.02);
 
-function keyReleased() {
-  if (mlReady) return;
-  if ([LEFT_ARROW, RIGHT_ARROW, UP_ARROW, DOWN_ARROW].includes(keyCode)) {
-    currentAction = 'NEUTRAL';
-  }
-}
+    // Solo avanzar pista global en caso de estar jugando
+    if (game.stateManager && game.stateManager.state === "JUGANDO") {
+        scrollY += gameSpeed;
+        frameCounter++;
+    }
+
+    game.update();
+    game.draw();
+};
+
+window.keyPressed = function() {
+    // Teclado funciona como fallback si ML no estÃ¡ listo (o si no existe mlReady)
+    const isMLReady = (typeof mlReady !== 'undefined') ? mlReady : false;
+
+    if (!isMLReady) {
+        if (keyCode === LEFT_ARROW) window.currentAction = "IZQUIERDA";
+        if (keyCode === RIGHT_ARROW) window.currentAction = "DERECHA";
+        if (keyCode === UP_ARROW) window.currentAction = "ADELANTE";
+        if (keyCode === DOWN_ARROW) window.currentAction = "NEUTRAL";
+    }
+    
+    // Controles de juego (Start y Pausa)
+    if (key === ' ' || key.toLowerCase() === 'p' || keyCode === 27) {
+        if (game.stateManager.state === "MENU" || game.stateManager.state === "GAME_OVER") {
+            if (key === ' ') game.stateManager.start(game);
+        } else if (game.stateManager.state === "JUGANDO" || game.stateManager.state === "PAUSA") {
+            game.stateManager.togglePause();
+        }
+    }
+};
+
+window.keyReleased = function() {
+    const isMLReady = (typeof mlReady !== 'undefined') ? mlReady : false;
+    if (!isMLReady) {
+        if (keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW || keyCode === UP_ARROW || keyCode === DOWN_ARROW) {
+            window.currentAction = "NEUTRAL";
+        }
+    }
+};

@@ -9,7 +9,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ─── Interfaz Miembro 1 (ML) ──────────────────────────────────
-let currentAction = 'NEUTRAL';
+window.currentAction = 'NEUTRAL';
 
 // ─── Interfaz Miembro 3 (colisiones / HUD) ────────────────────
 let player;

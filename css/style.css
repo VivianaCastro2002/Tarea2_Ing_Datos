@@ -1,0 +1,53 @@
+/* ── Reset ──────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ── Layout principal ───────────────────────────────────────── */
+body {
+  background: #050510;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: monospace;
+  color: #eee;
+  gap: 12px;
+  position: relative;
+}
+
+canvas {
+  display: block;
+}
+
+/* ── Información inferior ───────────────────────────────────── */
+#info {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+}
+
+/* ── Overlay de cámara (esquina inferior derecha del canvas) ── */
+#cam-overlay {
+  position: absolute;
+  bottom: 70px;
+  right: calc(50% - 400px + 8px);
+  width: 200px;
+  height: 200px;
+  border: 2px solid rgba(80, 255, 130, 0.5);
+  border-radius: 10px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Feed de video dentro del overlay (espejo para vista selfie) */
+#cam-overlay video {
+  width: 200px !important;
+  height: 200px !important;
+  object-fit: cover;
+  transform: scaleX(-1);
+  display: block !important;
+}

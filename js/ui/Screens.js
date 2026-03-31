@@ -16,7 +16,7 @@ export function drawMenu() {
   textAlign(CENTER, CENTER);
   textStyle(BOLD);
   textSize(45);
-  text("JUEGO P5", width / 2, height / 3);
+  text("MIAURIO KART", width / 2, height / 3);
   
   textStyle(NORMAL);
   textSize(20);

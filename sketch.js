@@ -6,9 +6,7 @@ import { Game } from "./js/game/Game.js";
  */
 let game;
 
-// ═══════════════════════════════════════════════════════════════
-//  FUNCIONES DE PISTA
-// ═══════════════════════════════════════════════════════════════
+// ── FUNCIONES DE PISTA ──────────────────────────────────────
 
 function drawStars() {
   background(5, 5, 20);
@@ -99,72 +97,71 @@ window.drawTrack = function() {
 };
 
 window.setup = function() {
-    createCanvas(800, 600); // 800 de ancho para acomodar la pista de la rama dev
-    
-    // Pre-generar estrellas con semilla fija
-    randomSeed(42);
-    for (let i = 0; i < 200; i++) {
-        starsArray.push({
-            x: random(width), y: random(height),
-            s: random(1, 4),
-            r: 255, g: 255,
-            b: random(200, 255),
-            a: random(100, 255),
-        });
-    }
-    randomSeed(); 
+  createCanvas(800, 600);
 
-    game = new Game();
+  // Pre-generar estrellas con semilla fija para el fondo
+  randomSeed(42);
+  for (let i = 0; i < 200; i++) {
+    starsArray.push({
+      x: random(width), y: random(height),
+      s: random(1, 4),
+      r: 255, g: 255,
+      b: random(200, 255),
+      a: random(100, 255),
+    });
+  }
+  randomSeed();
 
-    if (typeof initML === "function") {
-        initML(); // Inicia el modelo
-    }
+  game = new Game();
+
+  if (typeof initML === "function") {
+    initML();
+  }
 };
 
 window.draw = function() {
-    if (typeof updateML === "function") updateML();
+  if (typeof updateML === "function") updateML();
 
-    // Lógica dinámica de velocidad basada en acción ML
-    if (window.currentAction === 'ADELANTE') gameSpeed = min(gameSpeed + 0.05, 12);
-    else if (window.currentAction === 'NEUTRAL' || window.currentAction === 'NINGUNA') gameSpeed = max(gameSpeed - 0.03, 2);
-    else gameSpeed = lerp(gameSpeed, 5, 0.02);
+  // Lógica dinámica de velocidad basada en acción ML
+  if (window.currentAction === 'ADELANTE') gameSpeed = min(gameSpeed + 0.05, 12);
+  else if (window.currentAction === 'NEUTRAL' || window.currentAction === 'NINGUNA') gameSpeed = max(gameSpeed - 0.03, 2);
+  else gameSpeed = lerp(gameSpeed, 5, 0.02);
 
-    // Solo avanzar pista global en caso de estar jugando
-    if (game.stateManager && game.stateManager.state === "JUGANDO") {
-        scrollY += gameSpeed;
-        frameCounter++;
-    }
+  // Avanzar scroll de pista solo mientras se está jugando
+  if (game.stateManager && game.stateManager.state === "JUGANDO") {
+    scrollY += gameSpeed;
+  }
 
-    game.update();
-    game.draw();
+  game.update();
+  game.draw();
 };
 
 window.keyPressed = function() {
-    // Teclado funciona como fallback si ML no estÃ¡ listo (o si no existe mlReady)
-    const isMLReady = (typeof mlReady !== 'undefined') ? mlReady : false;
+  // Teclado como fallback si ML no está listo
+  const isMLReady = (typeof mlReady !== 'undefined') ? mlReady : false;
 
-    if (!isMLReady) {
-        if (keyCode === LEFT_ARROW) window.currentAction = "IZQUIERDA";
-        if (keyCode === RIGHT_ARROW) window.currentAction = "DERECHA";
-        if (keyCode === UP_ARROW) window.currentAction = "ADELANTE";
-        if (keyCode === DOWN_ARROW) window.currentAction = "NEUTRAL";
+  if (!isMLReady) {
+    if (keyCode === LEFT_ARROW)  window.currentAction = "IZQUIERDA";
+    if (keyCode === RIGHT_ARROW) window.currentAction = "DERECHA";
+    if (keyCode === UP_ARROW)    window.currentAction = "ADELANTE";
+    if (keyCode === DOWN_ARROW)  window.currentAction = "NEUTRAL";
+  }
+
+  // Controles de estado del juego (Start y Pausa)
+  if (key === ' ' || key.toLowerCase() === 'p' || keyCode === 27) {
+    const st = game.stateManager.state;
+    if ((st === "MENU" || st === "GAME_OVER") && key === ' ') {
+      game.stateManager.start(game);
+    } else if (st === "JUGANDO" || st === "PAUSA") {
+      game.stateManager.togglePause();
     }
-    
-    // Controles de juego (Start y Pausa)
-    if (key === ' ' || key.toLowerCase() === 'p' || keyCode === 27) {
-        if (game.stateManager.state === "MENU" || game.stateManager.state === "GAME_OVER") {
-            if (key === ' ') game.stateManager.start(game);
-        } else if (game.stateManager.state === "JUGANDO" || game.stateManager.state === "PAUSA") {
-            game.stateManager.togglePause();
-        }
-    }
+  }
 };
 
 window.keyReleased = function() {
-    const isMLReady = (typeof mlReady !== 'undefined') ? mlReady : false;
-    if (!isMLReady) {
-        if (keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW || keyCode === UP_ARROW || keyCode === DOWN_ARROW) {
-            window.currentAction = "NEUTRAL";
-        }
-    }
+  const isMLReady = (typeof mlReady !== 'undefined') ? mlReady : false;
+  if (!isMLReady) {
+    const arrows = [LEFT_ARROW, RIGHT_ARROW, UP_ARROW, DOWN_ARROW];
+    if (arrows.includes(keyCode)) window.currentAction = "NEUTRAL";
+  }
 };

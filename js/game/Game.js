@@ -3,7 +3,6 @@
  * @author Vivi (Motor del juego) / Belén (Estados y vidas)
  * @description Clase core que engloba y coordina los sistemas, manejadores de estado,
  *              entidades y renderizado.
- * [MODIFICAR: ESTA ENTIDAD ES PARA DESARROLLO DE COLISIONES Y HUD, NO ES LA DEFINITIVA]
  */
 
 import { GameStateManager } from "./GameStateManager.js";
@@ -12,7 +11,7 @@ import { ObstacleSystem } from "../systems/ObstacleSystem.js";
 import { CollisionSystem } from "../systems/CollisionSystem.js";
 import { ScoreSystem } from "../systems/ScoreSystem.js";
 import { Renderer } from "../ui/Renderer.js";
-import Player from "../entities/player.js";
+import Player from "../entities/Player.js";
 
 /**
  * @class Game

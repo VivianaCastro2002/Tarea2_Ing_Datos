@@ -1,20 +1,22 @@
 /**
  * @file CollisionSystem.js
  * @author Belén (Estado, colisiones y HUD: Detección AABB y deducción de vidas)
- * @description Subsistema para validaciones e intersecciones físicas de objetos rígidos
+ * @description Subsistema para validaciones e intersecciones físicas de objetos rígidos.
+ *              Soporta tanto Obstacle estándar como Asteroid (con isDangerous()).
  */
 
 /**
- * Lógica matemática matricial de choque bidimensional AABB.
+ * Comprobación AABB entre dos rectángulos alineados con los ejes.
+ * Ambos objetos deben exponer: x (borde izq), y (borde sup), width, height.
  * @function checkAABB
- * @param {Object} a - Objeto portador de métricas tangibles [x, y, width, height].
- * @param {Object} b - Cajas obstructivas hostiles [x, y, width, height].
- * @returns {boolean} Concesión afirmativa si ambas presencias colindan dentro del recuadro del plano.
+ * @param {Object} a - Primer objeto con propiedades AABB.
+ * @param {Object} b - Segundo objeto con propiedades AABB.
+ * @returns {boolean} Verdadero si los rectángulos se solapan.
  */
 function checkAABB(a, b) {
   return (
-    a.x < b.x + b.width &&
-    a.x + a.width > b.x &&
+    a.x < b.x + b.width  &&
+    a.x + a.width  > b.x &&
     a.y < b.y + b.height &&
     a.y + a.height > b.y
   );
@@ -22,18 +24,22 @@ function checkAABB(a, b) {
 
 /**
  * @class CollisionSystem
- * @classdesc Controlador mediador para invocar análisis geométricos y reducir estadíticas (vidas).
+ * @classdesc Itera sobre todos los obstáculos activos y verifica colisión con el jugador.
+ *            Los asteroides solo se comprueban cuando isDangerous() es verdadero.
  */
 export class CollisionSystem {
   /**
    * @method check
-   * @description Módulo de iteración AABB contra cada variable perjudicial contra Player.
-   * @param {Object} player - Sujeto instanciable jugable del Game.
-   * @param {Array} obstacles - Listado global proveniente del ObstacleSystem.
-   * @param {Object} game - Nivel abstracto Game dictando alteración en vidas u transiciones lógicas.
+   * @description Recorre la lista de obstáculos y reduce vidas si hay impacto.
+   * @param {Object} player    - Jugador con propiedades AABB (x, y, width, height).
+   * @param {Array}  obstacles - Lista unificada de Obstacle y Asteroid activos.
+   * @param {Object} game      - Instancia principal del juego para mutar vidas.
    */
   check(player, obstacles, game) {
     for (let obs of obstacles) {
+      // Los asteroides son inofensivos mientras son pequeños (< 75 % progreso)
+      if (typeof obs.isDangerous === "function" && !obs.isDangerous()) continue;
+
       if (checkAABB(player, obs)) {
         if (!player.invulnerable) {
           game.lives--;

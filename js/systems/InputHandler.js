@@ -2,7 +2,6 @@
  * @file InputHandler.js
  * @author Vivi (Motor del juego: Vincular posición del jugador a currentAction)
  * @description Maneja y procesa el estado del input, ya sea desde ML5, cámara o teclado.
- * [MODIFICAR: ESTA ENTIDAD ES PARA DESARROLLO DE COLISIONES Y HUD, NO ES LA DEFINITIVA]
  */
 
 /**

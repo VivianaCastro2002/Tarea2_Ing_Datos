@@ -148,12 +148,18 @@ function setup() {
     });
   }
   randomSeed(); // liberar RNG para obstáculos y asteroides
+
+  // Inicializar modelo de Teachable Machine (async — no bloquea)
+  initML();
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  DRAW
 // ═══════════════════════════════════════════════════════════════
 function draw() {
+  // ── Actualizar predicción ML (async no bloqueante) ──────────
+  updateML();
+
   // Velocidad según acción
   if      (currentAction === 'ADELANTE') gameSpeed = min(gameSpeed + 0.05, 12);
   else if (currentAction === 'NEUTRAL')  gameSpeed = max(gameSpeed - 0.03, 2);
@@ -190,12 +196,15 @@ function draw() {
 
   // HUD
   drawHUD_M2();
+  drawMLStatus();
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  TECLADO — simula currentAction hasta integrar el modelo ML
+//  TECLADO — fallback cuando el modelo ML no está listo
 // ═══════════════════════════════════════════════════════════════
 function keyPressed() {
+  // El teclado solo actúa si el modelo ML aún no está activo
+  if (mlReady) return;
   if (keyCode === LEFT_ARROW)  currentAction = 'IZQUIERDA';
   if (keyCode === RIGHT_ARROW) currentAction = 'DERECHA';
   if (keyCode === UP_ARROW)    currentAction = 'ADELANTE';
@@ -203,6 +212,7 @@ function keyPressed() {
 }
 
 function keyReleased() {
+  if (mlReady) return;
   if ([LEFT_ARROW, RIGHT_ARROW, UP_ARROW, DOWN_ARROW].includes(keyCode)) {
     currentAction = 'NEUTRAL';
   }

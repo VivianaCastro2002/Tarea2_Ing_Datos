@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Miaurio Kart</title>
+  <meta name="description" content="Juego de carreras espacial controlado por gestos de mano usando ML5.js y P5.js">
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Bibliotecas: P5.js y ML5.js únicamente -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+</head>
+
+<body>
+  <div id="info">MIAURIO KART · ← → CARRIL</div>
+
+  <!-- Overlay donde aparece el feed de la webcam -->
+  <div id="cam-overlay"></div>
+
+  <!-- 1. Constantes y variables globales compartidas entre scripts -->
+  <script src="global.js"></script>
+
+  <!-- 2. Módulo ML con ml5.js (script clásico para acceso a globals de P5) -->
+  <script src="js/ml/handpose_ml.js"></script>
+
+  <!-- 3. Núcleo del juego en módulos ES6 -->
+  <script type="module" src="sketch.js"></script>
+</body>
+
+</html>

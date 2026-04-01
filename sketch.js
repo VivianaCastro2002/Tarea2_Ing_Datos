@@ -6,6 +6,13 @@ import { Game } from "./js/game/Game.js";
  */
 let game;
 
+let bgMusic;
+
+window.preload = function() {
+  // Carga la pista de música antes de iniciar el juego
+  bgMusic = loadSound('assets/bgMusic.mp3');
+};
+
 // ── FUNCIONES DE PISTA ──────────────────────────────────────
 
 function drawStars() {
@@ -136,6 +143,7 @@ window.draw = function() {
   game.draw();
 };
 
+
 window.keyPressed = function() {
   // Teclado como fallback si ML no está listo
   const isMLReady = (typeof mlReady !== 'undefined') ? mlReady : false;
@@ -152,8 +160,20 @@ window.keyPressed = function() {
     const st = game.stateManager.state;
     if ((st === "MENU" || st === "GAME_OVER") && key === ' ') {
       game.stateManager.start(game);
+
+      if (bgMusic && bgMusic.isLoaded() && !bgMusic.isPlaying()) {
+        bgMusic.loop();         // Reproducir en bucle infinito
+        bgMusic.setVolume(0.4); // Volumen al 40%
+      }
     } else if (st === "JUGANDO" || st === "PAUSA") {
       game.stateManager.togglePause();
+
+      if (st === "JUGANDO" && bgMusic && bgMusic.isPlaying()) {
+         bgMusic.pause();
+      } else if (st === "PAUSA" && bgMusic && !bgMusic.isPlaying()) {
+         bgMusic.loop();
+      }
+
     }
   }
 };

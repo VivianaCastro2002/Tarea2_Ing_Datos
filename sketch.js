@@ -1,24 +1,12 @@
-// ═══════════════════════════════════════════════════════════════
-//  sketch.js — Pista, setup, draw y teclado
-//
-//  Depende de: globals.js · Player.js · Obstacle.js · Asteroid.js
-// ═══════════════════════════════════════════════════════════════
+import { Game } from "./js/game/Game.js";
 
-// ─── Auxiliar: estrella de N puntas ───────────────────────────
-function drawStar(x, y, r1, r2, npoints) {
-  let angle = TWO_PI / npoints;
-  let half = angle / 2;
-  beginShape();
-  for (let a = -HALF_PI; a < TWO_PI - HALF_PI; a += angle) {
-    vertex(x + cos(a) * r2, y + sin(a) * r2);
-    vertex(x + cos(a + half) * r1, y + sin(a + half) * r1);
-  }
-  endShape(CLOSE);
-}
+// ===== GLOBAL =====
+/**
+ * @type {Game} Instancia global del juego principal.
+ */
+let game;
 
-// ═══════════════════════════════════════════════════════════════
-//  FUNCIONES DE PISTA
-// ═══════════════════════════════════════════════════════════════
+// ── FUNCIONES DE PISTA ──────────────────────────────────────
 
 function drawStars() {
   background(5, 5, 20);
@@ -98,44 +86,20 @@ function drawStartLine() {
   textStyle(NORMAL);
 }
 
-// ─── HUD provisional — el Miembro 3 reemplaza esto ────────────
-function drawHUD_M2() {
-  let col = color(255, 210, 0);
-  if (currentAction === 'IZQUIERDA') col = color(100, 180, 255);
-  if (currentAction === 'DERECHA') col = color(255, 100, 100);
-  if (currentAction === 'NEUTRAL') col = color(150, 150, 150);
+// Expuesto a window para ser consumido por Renderer.js
+window.drawTrack = function() {
+  drawStars();
+  drawRainbowTrack();
+  drawKerbs();
+  drawBorders();
+  drawLaneDividers();
+  drawStartLine();
+};
 
-  noStroke();
-  fill(0, 0, 0, 140);
-  rect(10, 10, 170, 36, 8);
-  fill(col);
-  textAlign(LEFT, CENTER);
-  textSize(14);
-  textStyle(BOLD);
-  text('► ' + currentAction, 22, 29);
-  textStyle(NORMAL);
-
-  fill(0, 0, 0, 140);
-  rect(10, 54, 170, 32, 8);
-  fill(200, 200, 200);
-  textSize(12);
-  text('SPEED: ' + nf(gameSpeed, 1, 1) + ' px/f', 22, 71);
-
-  fill(80, 80, 80, 180);
-  rect(10, height - 52, 225, 42, 8);
-  fill(120, 120, 120);
-  textSize(10);
-  text('← → : cambiar carril', 18, height - 38);
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  SETUP
-// ═══════════════════════════════════════════════════════════════
-function setup() {
+window.setup = function() {
   createCanvas(800, 600);
-  player = new Player();
 
-  // Pre-generar estrellas con semilla fija
+  // Pre-generar estrellas con semilla fija para el fondo
   randomSeed(42);
   for (let i = 0; i < 200; i++) {
     starsArray.push({
@@ -146,73 +110,58 @@ function setup() {
       a: random(100, 255),
     });
   }
-  randomSeed(); // liberar RNG para obstáculos y asteroides
+  randomSeed();
 
-  // Inicializar modelo de Teachable Machine (async — no bloquea)
-  initML();
-}
+  game = new Game();
 
-// ═══════════════════════════════════════════════════════════════
-//  DRAW
-// ═══════════════════════════════════════════════════════════════
-function draw() {
-  // ── Actualizar predicción ML (async no bloqueante) ──────────
-  updateML();
+  if (typeof initML === "function") {
+    initML();
+  }
+};
 
-  // Velocidad según acción
-  if (currentAction === 'ADELANTE') gameSpeed = min(gameSpeed + 0.05, 12);
-  else if (currentAction === 'NEUTRAL') gameSpeed = max(gameSpeed - 0.03, 2);
+window.draw = function() {
+  if (typeof updateML === "function") updateML();
+
+  // Lógica dinámica de velocidad basada en acción ML
+  if (window.currentAction === 'ADELANTE') gameSpeed = min(gameSpeed + 0.05, 12);
+  else if (window.currentAction === 'NEUTRAL' || window.currentAction === 'NINGUNA') gameSpeed = max(gameSpeed - 0.03, 2);
   else gameSpeed = lerp(gameSpeed, 5, 0.02);
 
-  scrollY += gameSpeed;
-
-  // Pista
-  drawStars();
-  drawRainbowTrack();
-  drawKerbs();
-  drawBorders();
-  drawLaneDividers();
-  drawStartLine();
-
-  // Spawn y loop de obstáculos + asteroides
-  frameCounter++;
-  if (frameCounter % OBS_SPAWN_RATE === 0) {
-    obstacles.push(new Obstacle());
-  }
-  if (frameCounter % 360 === 40) {
-    obstacles.push(new Asteroid());
+  // Avanzar scroll de pista solo mientras se está jugando
+  if (game.stateManager && game.stateManager.state === "JUGANDO") {
+    scrollY += gameSpeed;
   }
 
-  for (let i = obstacles.length - 1; i >= 0; i--) {
-    obstacles[i].update();
-    obstacles[i].draw();
-    if (obstacles[i].isOffScreen()) obstacles.splice(i, 1);
+  game.update();
+  game.draw();
+};
+
+window.keyPressed = function() {
+  // Teclado como fallback si ML no está listo
+  const isMLReady = (typeof mlReady !== 'undefined') ? mlReady : false;
+
+  if (!isMLReady) {
+    if (keyCode === LEFT_ARROW)  window.currentAction = "IZQUIERDA";
+    if (keyCode === RIGHT_ARROW) window.currentAction = "DERECHA";
+    if (keyCode === UP_ARROW)    window.currentAction = "ADELANTE";
+    if (keyCode === DOWN_ARROW)  window.currentAction = "NEUTRAL";
   }
 
-  // Player
-  player.update();
-  player.draw();
-
-  // HUD
-  drawHUD_M2();
-  drawMLStatus();
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  TECLADO — fallback cuando el modelo ML no está listo
-// ═══════════════════════════════════════════════════════════════
-function keyPressed() {
-  // El teclado solo actúa si el modelo ML aún no está activo
-  if (mlReady) return;
-  if (keyCode === LEFT_ARROW) currentAction = 'IZQUIERDA';
-  if (keyCode === RIGHT_ARROW) currentAction = 'DERECHA';
-  if (keyCode === UP_ARROW) currentAction = 'ADELANTE';
-  if (keyCode === DOWN_ARROW) currentAction = 'NEUTRAL';
-}
-
-function keyReleased() {
-  if (mlReady) return;
-  if ([LEFT_ARROW, RIGHT_ARROW, UP_ARROW, DOWN_ARROW].includes(keyCode)) {
-    currentAction = 'NEUTRAL';
+  // Controles de estado del juego (Start y Pausa)
+  if (key === ' ' || key.toLowerCase() === 'p' || keyCode === 27) {
+    const st = game.stateManager.state;
+    if ((st === "MENU" || st === "GAME_OVER") && key === ' ') {
+      game.stateManager.start(game);
+    } else if (st === "JUGANDO" || st === "PAUSA") {
+      game.stateManager.togglePause();
+    }
   }
-}
+};
+
+window.keyReleased = function() {
+  const isMLReady = (typeof mlReady !== 'undefined') ? mlReady : false;
+  if (!isMLReady) {
+    const arrows = [LEFT_ARROW, RIGHT_ARROW, UP_ARROW, DOWN_ARROW];
+    if (arrows.includes(keyCode)) window.currentAction = "NEUTRAL";
+  }
+};

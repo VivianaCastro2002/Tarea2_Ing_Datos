@@ -1,5 +1,4 @@
-// ═══════════════════════════════════════════════════════════════
-//  handpose_ml.js — Integración con ml5.js (ImageClassifier)
+// ── handpose_ml.js — Integración con ml5.js (ImageClassifier) ──
 //
 //  Usa ml5.imageClassifier() con el modelo de Teachable Machine.
 //  ml5 corre su propio loop de clasificación via callbacks.
@@ -13,11 +12,11 @@
 //    2. Filtro de mayoría    — ventana de 10 frames, mayoría >= 70 %
 //    3. Cooldown             — 500 ms de bloqueo tras cada cambio
 //    4. Pulso único          — un gesto = un carril (detección de flanco)
-// ═══════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────────────────────────
 
 const TM_MODEL_URL = 'https://teachablemachine.withgoogle.com/models/0iIbdJx5o/';
 
-// ─── Estado del módulo ML ─────────────────────────────────────
+// ─── Estado del módulo ML ─────────────────────────────────────────
 let classifier = null;  // clasificador ml5
 let mlVideo    = null;  // elemento de video (p5 createCapture)
 let mlReady    = false; // true cuando modelo + cámara listos
@@ -30,13 +29,13 @@ const CLASS_MAP = {
   'Nada'      : 'NEUTRAL',
 };
 
-// ─── Parámetros de estabilización ────────────────────────────
+// ─── Parámetros de estabilización ────────────────────────────────
 const CONFIDENCE_THRESHOLD = 0.85;
 const HISTORY_SIZE         = 10;
 const MAJORITY_RATIO       = 0.70;
 const COOLDOWN_MS          = 500;
 
-// ─── Buffers de estabilización ───────────────────────────────
+// ─── Buffers de estabilización ───────────────────────────────────
 let predictionHistory = [];
 let lastActionTime    = 0;
 let lastRawClass      = 'Nada';
@@ -44,7 +43,7 @@ let lastRawConf       = 0;
 let lastStableClass   = 'Nada';
 let lastFiredAction   = 'NEUTRAL';
 
-// ─── Filtro de mayoría ────────────────────────────────────────
+// ─── Filtro de mayoría ────────────────────────────────────────────
 function getMajorityClass() {
   if (predictionHistory.length < HISTORY_SIZE) return null;
   const counts = {};
@@ -55,7 +54,7 @@ function getMajorityClass() {
   return null;
 }
 
-// ─── Callback de resultado del clasificador ───────────────────
+// ─── Callback de resultado del clasificador ───────────────────────
 function onMLResult(error, results) {
   if (error) {
     mlError = String(error);
@@ -71,10 +70,10 @@ function onMLResult(error, results) {
   lastRawClass = bestClass;
   lastRawConf  = bestConf;
 
-  // ── Técnica 1: Umbral de confianza ─────────────────────────
+  // Técnica 1: Umbral de confianza
   const acceptedClass = (bestConf >= CONFIDENCE_THRESHOLD) ? bestClass : 'Nada';
 
-  // ── Técnica 2: Filtro de mayoría ───────────────────────────
+  // Técnica 2: Filtro de mayoría
   predictionHistory.push(acceptedClass);
   if (predictionHistory.length > HISTORY_SIZE) predictionHistory.shift();
 
@@ -83,17 +82,17 @@ function onMLResult(error, results) {
     const desiredAction = CLASS_MAP[majorityClass] ?? 'NEUTRAL';
     const now           = performance.now();
 
-    // ── Técnica 4: Pulso único (detección de flanco) ─────────
+    // Técnica 4: Pulso único (detección de flanco)
     if (majorityClass !== lastStableClass) {
       lastStableClass = majorityClass;
 
       if (desiredAction !== 'NEUTRAL') {
-        // ── Técnica 3: Cooldown ──────────────────────────────
+        // Técnica 3: Cooldown
         if (now - lastActionTime >= COOLDOWN_MS) {
           currentAction   = desiredAction;
           lastFiredAction = desiredAction;
           lastActionTime  = now;
-          // Reset a NEUTRAL después de un frame para el Player
+          // Reset a NEUTRAL después de un frame para que InputHandler lo procese
           setTimeout(() => { currentAction = 'NEUTRAL'; }, 32);
         }
       } else {
@@ -107,40 +106,33 @@ function onMLResult(error, results) {
   classifier.classify(onMLResult);
 }
 
-// ─── Callback cuando el modelo termina de cargar ─────────────
+// ─── Callback cuando el modelo termina de cargar ──────────────────
 function onModelReady() {
   mlReady = true;
   console.log('[ML5] Modelo cargado ✓ — iniciando clasificación');
   classifier.classify(onMLResult);
 }
 
-// ─── Inicialización — llamar UNA vez desde setup() ────────────
-//  Nota: debe correr dentro del contexto p5 para que
-//  createCapture() funcione correctamente.
+// ─── Inicialización — llamar UNA vez desde setup() ────────────────
+//  Debe correr dentro del contexto p5 para que createCapture() funcione.
 function initML() {
-  // Crear captura de video con p5 (sin dibujarlo en el canvas)
   mlVideo = createCapture(VIDEO);
   mlVideo.size(200, 200);
-  mlVideo.hide(); // ocultar el elemento por defecto de p5
+  mlVideo.hide();
 
   // Mover el elemento <video> al overlay del HUD
   const container = document.getElementById('cam-overlay');
   if (container) container.appendChild(mlVideo.elt);
 
-  // Cargar el clasificador con ml5
-  // ml5.imageClassifier(url, videoElement, readyCallback)
   classifier = ml5.imageClassifier(TM_MODEL_URL, mlVideo, onModelReady);
   console.log('[ML5] Cargando modelo desde Teachable Machine...');
 }
 
-// ─── updateML — no-op, ml5 corre su propio loop de callbacks ──
-//  Se llama desde draw() en sketch.js para mantener la interfaz.
-function updateML() {
-  // ml5 maneja su propio ciclo de clasificación.
-  // No se necesita hacer nada aquí.
-}
+// ─── updateML — no-op, ml5 corre su propio loop de callbacks ──────
+//  Se llama desde draw() en sketch.js para mantener la interfaz uniforme.
+function updateML() {}
 
-// ─── HUD de debug del modelo ──────────────────────────────────
+// ─── Panel de estado del modelo (HUD de debug) ───────────────────
 function drawMLStatus() {
   const panelH = mlReady ? 96 : 52;
   noStroke();
@@ -161,25 +153,22 @@ function drawMLStatus() {
     text('Cargando modelo ML5...', width - 210, height - panelH + 24);
 
   } else {
-    const bX  = width - 210;
+    const bX   = width - 210;
     const barW = 195;
+    const barY = height - panelH + 20;
 
-    // Estado del modelo
     fill(80, 255, 130);
     text('Modelo ML5 activo', bX, height - panelH + 10);
 
     // Barra de confianza
-    const barY = height - panelH + 20;
     fill(40, 40, 40);
     rect(bX, barY, barW, 7, 3);
-    fill(lastRawConf >= CONFIDENCE_THRESHOLD ? color(80,255,130) : color(255,160,40));
+    fill(lastRawConf >= CONFIDENCE_THRESHOLD ? color(80, 255, 130) : color(255, 160, 40));
     rect(bX, barY, barW * lastRawConf, 7, 3);
 
-    // Lo que ve la cámara ahora
     fill(200, 200, 200);
     text('Camara: ' + lastRawClass + ' ' + nf(lastRawConf * 100, 1, 0) + '%', bX, barY + 14);
 
-    // Estado del gesto
     if (lastStableClass !== 'Nada') {
       fill(255, 200, 60);
       text('Baja la mano para el proximo', bX, barY + 28);

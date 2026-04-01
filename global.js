@@ -1,15 +1,14 @@
-// ═══════════════════════════════════════════════════════════════
-//  globals.js — Constantes y variables compartidas entre módulos
+// ── global.js — Constantes y variables compartidas entre módulos
 //
-//  VARIABLE que el Miembro 1 sobreescribe cada frame:
+//  VARIABLE que el módulo ML sobreescribe cada frame:
 //    currentAction → 'IZQUIERDA' | 'DERECHA' | 'ADELANTE' | 'NEUTRAL'
 //
-//  VARIABLES que el Miembro 3 lee:
+//  VARIABLES que los sistemas leen:
 //    player, obstacles, gameSpeed
-// ═══════════════════════════════════════════════════════════════
+// ──────────────────────────────────────────────────────────────
 
 // ─── Interfaz Miembro 1 (ML) ──────────────────────────────────
-let currentAction = 'NEUTRAL';
+window.currentAction = 'NEUTRAL';
 
 // ─── Interfaz Miembro 3 (colisiones / HUD) ────────────────────
 let player;
@@ -51,7 +50,4 @@ const KERB_W     = 12;
 const OBS_W          = 50;
 const OBS_H          = 60;
 const OBS_SPAWN_RATE = 90;
-let   frameCounter   = 0;
-
-// ─── Invulnerabilidad — el Miembro 3 la controla ─────────────
-let invulnerable = false;
+

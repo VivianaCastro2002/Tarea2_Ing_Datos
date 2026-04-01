@@ -3,65 +3,16 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Miaurio Kart</title>
+  <meta name="description" content="Juego de carreras espacial controlado por gestos de mano usando ML5.js y P5.js">
 
-  <!-- ✅ Bibliotecas permitidas: P5 y ML5 únicamente -->
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Bibliotecas: P5.js y ML5.js únicamente -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
   <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
-
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      background: #050510;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      font-family: monospace;
-      color: #eee;
-      gap: 12px;
-      position: relative;
-    }
-
-    canvas {
-      display: block;
-    }
-
-    #info {
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      opacity: 0.5;
-    }
-
-    /* Overlay de cámara — esquina inferior derecha del canvas */
-    #cam-overlay {
-      position: absolute;
-      bottom: 70px;
-      right: calc(50% - 400px + 8px);
-      width: 200px;
-      height: 200px;
-      border: 2px solid rgba(80, 255, 130, 0.5);
-      border-radius: 10px;
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-    /* El video de p5 dentro del overlay */
-    #cam-overlay video {
-      width: 200px !important;
-      height: 200px !important;
-      object-fit: cover;
-      transform: scaleX(-1);
-      /* espejo para vista selfie */
-      display: block !important;
-    }
-  </style>
 </head>
 
 <body>
@@ -70,19 +21,14 @@
   <!-- Overlay donde aparece el feed de la webcam -->
   <div id="cam-overlay"></div>
 
-  <!-- 1. Constantes y variables globales -->
+  <!-- 1. Constantes y variables globales compartidas entre scripts -->
   <script src="global.js"></script>
 
-  <!-- 2. Módulo ML con ml5.js -->
-  <script src="js/handpose_ml.js"></script>
+  <!-- 2. Módulo ML con ml5.js (script clásico para acceso a globals de P5) -->
+  <script src="js/ml/handpose_ml.js"></script>
 
-  <!-- 3. Clases de entidades -->
-  <script src="js/player.js"></script>
-  <script src="js/obstacle.js"></script>
-  <script src="js/asteroid.js"></script>
-
-  <!-- 4. Pista y loop principal -->
-  <script src="sketch.js"></script>
+  <!-- 3. Núcleo del juego en módulos ES6 -->
+  <script type="module" src="sketch.js"></script>
 </body>
 
 </html>
